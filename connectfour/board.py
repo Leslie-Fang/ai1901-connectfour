@@ -81,6 +81,17 @@ class Board(object):
                 if self.valid_move(row, col):
                     yield (row, col)
 
+    def valid_moves_v2(self):
+        """
+        Returns: A generator of all valid moves in the current board state
+        """
+        res = []
+        for col in range(self.width):
+            for row in range(self.height):
+                if self.valid_move(row, col):
+                    res.append((row, col))
+        return res
+
     def terminal(self):
         """
         Returns true when the game is finished, otherwise false.
@@ -100,6 +111,11 @@ class Board(object):
                 legal.append(i)
 
         return legal
+
+    def next_state_v2(self, move, value):
+        aux = copy.deepcopy(self)
+        aux.board[move[0]][move[1]] = value
+        return aux
 
     def next_state(self, turn):
         aux = copy.deepcopy(self)
