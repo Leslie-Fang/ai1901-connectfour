@@ -1,6 +1,7 @@
 ## Introduction
 https://github.com/rmit-s3664000-cameron-sugiada/ai1901-connectfour.git
 Based on this repo, we add new stragety with RL(Reinforcement Learning)
+强化学习(Reinforcement Learning) 在conect4 棋上的应用
 
 ## Setup
 The code was written in **Python 3.6**. 
@@ -29,7 +30,7 @@ python -m connectfour.game --player-one HumanPlayer --player-two HumanPlayer
 
 ### Robot VS Human
 ```
-python -m connectfour.game --player-one RandomAgent --player-two HumanPlayer
+python -m connectfour.game --player-one RLAgent --player-two HumanPlayer
 ```
 
 ### No GUI
