@@ -4,7 +4,9 @@ conect4 游戏规则：
 最先在横向，竖向以及对角方向连出4个棋子的一方获胜。
 
 Based on this repo, we add new stragety with RL(Reinforcement Learning)
+
 git clone https://github.com/rmit-s3664000-cameron-sugiada/ai1901-connectfour.git
+
 强化学习(Reinforcement Learning) 在conect4 棋上的应用(实现参考了这个[博客](!https://roadtolarissa.com/connect-4-ai-how-it-works/))
 
 ## Setup
