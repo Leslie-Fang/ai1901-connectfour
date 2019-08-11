@@ -115,6 +115,7 @@ class Board(object):
     def next_state_v2(self, move, value):
         aux = copy.deepcopy(self)
         aux.board[move[0]][move[1]] = value
+        aux.last_move = [move[0], move[1]]
         return aux
 
     def next_state(self, turn):

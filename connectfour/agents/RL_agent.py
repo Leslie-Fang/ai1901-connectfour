@@ -1,23 +1,16 @@
 from connectfour.agents.agent import Agent
 import random
 
-class state(object):
-    def __init__(
-        self,
-        board=None,
-    ):
-        self.board = board
-
 class RLAgent(Agent):
     def __init__(self, name):
         super().__init__(name)
 
     def DFS(self, id, scores, board, turn, mapping, search_deepth):
-        print("---------start new iteration-----------")
+        # print("---------start new iteration-----------")
         if search_deepth <= 0:
             return
+        # Here is first deepth's search
         if id is None:
-            # Here is first deepth's search
             # Find all the possible moves
             cvalid_moves = board.valid_moves_v2()
             for i in range(len(cvalid_moves)):
@@ -28,20 +21,21 @@ class RLAgent(Agent):
                     # If the first move makes it win, just move it.
                     return c_board
                 else:
-                    # No win move, DFS to next search level
+                    # No win move, DFS to next search level, turn*(-1) to change player
                     self.DFS(i, scores, c_board, turn*(-1), mapping, search_deepth-1)
+        # Generally search steps
         else:
-            # Generally search steps
             # Find all the possible moves
             cvalid_moves = board.valid_moves_v2()
             for i in range(len(cvalid_moves)):
-                print(len(cvalid_moves))
                 # Get the all the next board corresponding to the moves
                 c_board = board.next_state_v2(cvalid_moves[i], mapping[turn])
                 if c_board._check_rows() or c_board._check_columns() or c_board._check_diagonals():
                     # If find win moves, add the score in the scores
+                    # turn 1: our player; tune -1: opponent player
                     scores[id] += turn * 100
                 else:
+                    # No win move, DFS to next search level, turn*(-1) to change player
                     self.DFS(id, scores, c_board, turn * (-1), mapping, search_deepth-1)
             return None
 
@@ -54,21 +48,60 @@ class RLAgent(Agent):
         turn = 1
         cboard = self.DFS(None, scores, board, turn, mapping, search_deepth)
         if cboard:
-            print("--------cboard exits------------")
+            #print("--------cboard exits------------")
             return cboard
-        print("-----------Score------------")
+        #print("-----------Score------------")
         max_score = scores[0]
         best = []
+        cvalid_moves = board.valid_moves_v2()
+        # Find the moves with largest score
         for i in range(len(scores)):
-            print("score[{0}] is {1}".format(i, scores[i]))
+            #print("move[{0}:{1}] score[{2}] is {3}".format(cvalid_moves[i][0], cvalid_moves[i][1], i, scores[i]))
             if scores[i] == max_score:
                 best.append(i)
             elif scores[i] > max_score:
                 max_score = scores[i]
                 best = []
                 best.append(i)
-        id = random.choice(best)
-        cvalid_moves = board.valid_moves_v2()
+        # Random pick one move with largest score
+        # id = random.choice(best)
+
+        # Find the moves with longest link among the best
+        max_connected_nums = []
+        for move_candidate_id in best:
+            max_connected = 0
+            c_board = board.next_state_v2(cvalid_moves[move_candidate_id], mapping[1])
+            temp = self.search_horizon(c_board)
+            if temp > max_connected:
+                max_connected = temp
+            temp = self.search_vertical(c_board)
+            if temp > max_connected:
+                max_connected = temp
+            temp = self.search_diagonals_from_leftrupper(c_board)
+            if temp > max_connected:
+                max_connected = temp
+            temp = self.search_diagonals_from_rightrupper(c_board)
+            if temp > max_connected:
+                max_connected = temp
+            max_connected_nums.append(max_connected)
+        max_connected = 0
+        best2 = []
+        for i in range(len(max_connected_nums)):
+            if max_connected_nums[i] == max_connected:
+                #max_connected = max_connected_nums[i]
+                best2.append(best[i])
+            elif max_connected_nums[i] > max_connected:
+                max_connected = max_connected_nums[i]
+                best2 = []
+                best2.append(best[i])
+
+        # # Random pick one move with largest score
+        # id = random.choice(best2)
+
+        # Pick the one most close to the middle
+        indexs_c = list(map(lambda x: abs(x - board.width / 2), best2))
+        id = best2[indexs_c.index(min(indexs_c))]
+
         return board.next_state_v2(cvalid_moves[id], mapping[1])
 
     def _find_move_from_new_board_state(self, old, new):
@@ -118,13 +151,95 @@ class RLAgent(Agent):
         best_move = self.find_best_move(board, 4)
         return self._find_move_from_new_board_state(board.board, best_move.board)
 
-    def evaluateBoardState(self, board, player):
-        """
-        Your evaluation function should look at the current state and return a score for it.
-        As an example, the random agent provided works as follows:
-            If the opponent has won this game, return -1.
-            If we have won the game, return 1.
-            If neither of the players has won, return a random number.
-        """
+    def search_horizon(self,board):
+        last_move_row = board.last_move[0]
+        last_move_column = board.last_move[1]
+        cell_value = board.get_cell_value(last_move_row, last_move_column)
+        connected_num = 1
+        c_move_column = last_move_column
+        while c_move_column+1 < board.width:
+            c_move_column = c_move_column+1
+            if board.get_cell_value(last_move_row, c_move_column) == cell_value:
+                connected_num += 1
+            else:
+                break
+        c_move_column = last_move_column
+        while c_move_column-1 >= 0:
+            c_move_column = c_move_column-1
+            if board.get_cell_value(last_move_row, c_move_column) == cell_value:
+                connected_num += 1
+            else:
+                break
+        return connected_num
 
-        return 0
+    def search_vertical(self,board):
+        last_move_row = board.last_move[0]
+        last_move_column = board.last_move[1]
+        cell_value = board.get_cell_value(last_move_row,last_move_column)
+        connected_num = 1
+        c_move_row = last_move_row
+        while c_move_row+1 < board.height:
+            c_move_row = c_move_row + 1
+            if board.get_cell_value(c_move_row,last_move_column) == cell_value:
+                connected_num += 1
+            else:
+                break
+        c_move_row = last_move_row
+        while c_move_row - 1 >= 0:
+            c_move_row = c_move_row - 1
+            if board.get_cell_value(c_move_row,last_move_column) == cell_value:
+                connected_num += 1
+            else:
+                break
+        return connected_num
+
+    def search_diagonals_from_leftrupper(self,board):
+        last_move_row = board.last_move[0]
+        last_move_column = board.last_move[1]
+        cell_value = board.get_cell_value(last_move_row,last_move_column)
+        connected_num = 1
+        c_move_row = last_move_row
+        c_move_column = last_move_column
+        while c_move_row - 1 >=0 and c_move_column-1>=0:
+            c_move_row -= 1
+            c_move_column -= 1
+            if board.get_cell_value(c_move_row,c_move_column) == cell_value:
+                connected_num += 1
+            else:
+                break
+        c_move_row = last_move_row
+        c_move_column = last_move_column
+        while c_move_row + 1 < board.height and c_move_column+1 < board.width:
+            c_move_row += 1
+            c_move_column += 1
+            if board.get_cell_value(c_move_row,c_move_column) == cell_value:
+                connected_num += 1
+            else:
+                break
+        return connected_num
+
+
+    def search_diagonals_from_rightrupper(self,board):
+        last_move_row = board.last_move[0]
+        last_move_column = board.last_move[1]
+        cell_value = board.get_cell_value(last_move_row,last_move_column)
+        connected_num = 1
+        c_move_row = last_move_row
+        c_move_column = last_move_column
+        while c_move_row - 1 >=0 and c_move_column+1 < board.width:
+            c_move_row -= 1
+            c_move_column += 1
+            if board.get_cell_value(c_move_row,c_move_column) == cell_value:
+                connected_num += 1
+            else:
+                break
+        c_move_row = last_move_row
+        c_move_column = last_move_column
+        while c_move_row + 1 < board.height and c_move_column - 1 >=0 :
+            c_move_row += 1
+            c_move_column -= 1
+            if board.get_cell_value(c_move_row,c_move_column) == cell_value:
+                connected_num += 1
+            else:
+                break
+        return connected_num

@@ -1,7 +1,11 @@
 ## Introduction
-https://github.com/rmit-s3664000-cameron-sugiada/ai1901-connectfour.git
+conect4 游戏规则：
+在6行7列的棋盘上轮流下棋，可以选择任意空的位置下棋，但是如果选择的位置下方是空的，下在该位置上的棋子会下落到底部。
+最先在横向，竖向以及对角方向连出4个棋子的一方获胜。
+
 Based on this repo, we add new stragety with RL(Reinforcement Learning)
-强化学习(Reinforcement Learning) 在conect4 棋上的应用
+git clone https://github.com/rmit-s3664000-cameron-sugiada/ai1901-connectfour.git
+强化学习(Reinforcement Learning) 在conect4 棋上的应用(实现参考了这个[博客](!https://roadtolarissa.com/connect-4-ai-how-it-works/))
 
 ## Setup
 The code was written in **Python 3.6**. 
@@ -30,10 +34,18 @@ python -m connectfour.game --player-one HumanPlayer --player-two HumanPlayer
 
 ### Robot VS Human
 ```
-python -m connectfour.game --player-one RLAgent --player-two HumanPlayer
+python -m connectfour.game --player-one HumanPlayer --player-two RLAgent
 ```
+大部分情况下，我已经下不过它了
 
 ### No GUI
 ```
 python -m connectfour.game --player-one MonteCarloAgent --player-two StudentAgent --no-graphics --fast --auto-close
 ```
+
+### Calculate Win rate
+```
+python runtest.py
+```
+Raw RL method VS MonteCarloAgent: 99% (most times is 100%)
+
